@@ -1,54 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Arduino API Proxy</title>
+  <title>Arduino Air Quality Sensor Proxy</title>
   <script>
-    // This function handles both GET and POST requests
     async function handleRequest() {
-      // Parse URL parameters
+      // Get parameters from URL
       const urlParams = new URLSearchParams(window.location.search);
       const gsid = urlParams.get('gsid');
-      const method = urlParams.get('method') || 'GET';
+      const payload = urlParams.get('payload');
       
       if (!gsid) {
         document.getElementById('response').textContent = 'Error: Missing gsid parameter';
         return;
       }
 
-      // Construct the Google Script URL
-      const googleScriptUrl = `https://script.google.com/macros/s/${gsid}/exec`;
-      
-      // Create a new URL object to properly handle additional parameters
-      const targetUrl = new URL(googleScriptUrl);
-      
-      // Copy all parameters except gsid and method
-      for (const [key, value] of urlParams.entries()) {
-        if (key !== 'gsid' && key !== 'method') {
-          targetUrl.searchParams.append(key, value);
-        }
+      if (!payload) {
+        document.getElementById('response').textContent = 'Error: Missing payload parameter';
+        return;
       }
-      
+
       try {
+        // Log what we received (helpful for debugging)
+        console.log("GSID:", gsid);
+        console.log("Payload:", payload);
+        
+        // Construct the Google Script URL
+        const googleScriptUrl = `https://script.google.com/macros/s/${gsid}/exec`;
+        
+        // Decode the URL-encoded payload
+        const decodedPayload = decodeURIComponent(payload);
+        
         // Make the request to Google Script
-        const response = await fetch(targetUrl.toString(), {
-          method: method,
+        const response = await fetch(googleScriptUrl, {
+          method: 'POST',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Arduino-WiFi101'
-          }
+            'Content-Type': 'application/json'
+          },
+          body: decodedPayload  // Send the decoded JSON payload
         });
         
-        // Get the response as text
+        // Get and display the response
         const data = await response.text();
+        document.getElementById('response').textContent = 'Response from Google: ' + data;
         
-        // Display the response (useful for debugging)
-        document.getElementById('response').textContent = data;
-        
-        // Also return the response as plain text for API requests
-        document.getElementById('plaintext').textContent = data;
+        // Also add to log for debugging
+        const logDiv = document.getElementById('log');
+        const timestamp = new Date().toISOString();
+        logDiv.innerHTML += `<p>${timestamp}: ${data}</p>`;
       } catch (error) {
         document.getElementById('response').textContent = `Error: ${error.message}`;
-        document.getElementById('plaintext').textContent = `Error: ${error.message}`;
+        
+        // Log error for debugging
+        const logDiv = document.getElementById('log');
+        const timestamp = new Date().toISOString();
+        logDiv.innerHTML += `<p>${timestamp}: ERROR - ${error.message}</p>`;
       }
     }
     
@@ -57,10 +62,10 @@
   </script>
 </head>
 <body>
-  <!-- This displays formatted response for browser viewing -->
-  <pre id="response"></pre>
+  <h1>Arduino Air Quality Sensor Proxy</h1>
+  <div id="response">Processing request...</div>
   
-  <!-- This is for plain text responses that Arduino can parse -->
-  <div id="plaintext" style="display:none;"></div>
+  <h2>Log (most recent requests):</h2>
+  <div id="log"></div>
 </body>
 </html>
