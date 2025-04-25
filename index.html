@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Arduino API Proxy</title>
+  <script>
+    async function handleRequest(request) {
+      // Get the Google Script ID from the URL parameters
+      const url = new URL(window.location.href);
+      const gsid = url.searchParams.get('gsid') || url.searchParams.get('value');
+      
+      // Create the Google Script URL
+      let googleScriptUrl = "https://script.google.com/macros/s/";
+      if (gsid) {
+        googleScriptUrl += gsid + "/exec";
+        // Copy additional query parameters
+        for (const [key, value] of url.searchParams.entries()) {
+          if (key !== 'gsid' && key !== 'value') {
+            googleScriptUrl += (googleScriptUrl.includes('?') ? '&' : '?') + key + '=' + value;
+          }
+        }
+      }
+      
+      // Make the request to Google
+      try {
+        const response = await fetch(googleScriptUrl);
+        const data = await response.text();
+        document.getElementById('response').innerText = data;
+      } catch (error) {
+        document.getElementById('response').innerText = "Error: " + error.message;
+      }
+    }
+    
+    window.onload = function() {
+      handleRequest();
+    };
+  </script>
+</head>
+<body>
+  <div id="response"></div>
+</body>
+</html>
