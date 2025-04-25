@@ -3,39 +3,64 @@
 <head>
   <title>Arduino API Proxy</title>
   <script>
-    async function handleRequest(request) {
-      // Get the Google Script ID from the URL parameters
-      const url = new URL(window.location.href);
-      const gsid = url.searchParams.get('gsid') || url.searchParams.get('value');
+    // This function handles both GET and POST requests
+    async function handleRequest() {
+      // Parse URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const gsid = urlParams.get('gsid');
+      const method = urlParams.get('method') || 'GET';
       
-      // Create the Google Script URL
-      let googleScriptUrl = "https://script.google.com/macros/s/";
-      if (gsid) {
-        googleScriptUrl += gsid + "/exec";
-        // Copy additional query parameters
-        for (const [key, value] of url.searchParams.entries()) {
-          if (key !== 'gsid' && key !== 'value') {
-            googleScriptUrl += (googleScriptUrl.includes('?') ? '&' : '?') + key + '=' + value;
-          }
+      if (!gsid) {
+        document.getElementById('response').textContent = 'Error: Missing gsid parameter';
+        return;
+      }
+
+      // Construct the Google Script URL
+      const googleScriptUrl = `https://script.google.com/macros/s/${gsid}/exec`;
+      
+      // Create a new URL object to properly handle additional parameters
+      const targetUrl = new URL(googleScriptUrl);
+      
+      // Copy all parameters except gsid and method
+      for (const [key, value] of urlParams.entries()) {
+        if (key !== 'gsid' && key !== 'method') {
+          targetUrl.searchParams.append(key, value);
         }
       }
       
-      // Make the request to Google
       try {
-        const response = await fetch(googleScriptUrl);
+        // Make the request to Google Script
+        const response = await fetch(targetUrl.toString(), {
+          method: method,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Arduino-WiFi101'
+          }
+        });
+        
+        // Get the response as text
         const data = await response.text();
-        document.getElementById('response').innerText = data;
+        
+        // Display the response (useful for debugging)
+        document.getElementById('response').textContent = data;
+        
+        // Also return the response as plain text for API requests
+        document.getElementById('plaintext').textContent = data;
       } catch (error) {
-        document.getElementById('response').innerText = "Error: " + error.message;
+        document.getElementById('response').textContent = `Error: ${error.message}`;
+        document.getElementById('plaintext').textContent = `Error: ${error.message}`;
       }
     }
     
-    window.onload = function() {
-      handleRequest();
-    };
+    // Run the handler when the page loads
+    window.onload = handleRequest;
   </script>
 </head>
 <body>
-  <div id="response"></div>
+  <!-- This displays formatted response for browser viewing -->
+  <pre id="response"></pre>
+  
+  <!-- This is for plain text responses that Arduino can parse -->
+  <div id="plaintext" style="display:none;"></div>
 </body>
 </html>
