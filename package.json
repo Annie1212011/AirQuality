@@ -1,0 +1,8 @@
+{
+  "name": "arduino-proxy",
+  "version": "1.0.0",
+  "description": "Proxy for Arduino to Google Scripts",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}
