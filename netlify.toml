@@ -11,3 +11,11 @@
   from = "/nossl/*"
   to = "/.netlify/functions/:splat"
   status = 200
+
+[[headers]]
+  for = "/nossl/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    # Disable HTTP to HTTPS redirect for this path
+    Netlify-Force-HTTPS = "false"
