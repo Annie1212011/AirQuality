@@ -1,6 +1,6 @@
 [build]
-  publish = "."  # Deploy the root directory as the site
-  functions = "functions"  # Where your serverless functions live
+  publish = "public"
+  functions = "functions"
 
 [[redirects]]
   from = "/api/*"
