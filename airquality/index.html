@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Arduino Google Sheets Proxy</title>
+  <script>
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+    
+    async function sendToGoogleSheets() {
+      try {
+        // Get parameters
+        const gsid = getQueryParam('gsid');
+        const payload = getQueryParam('payload');
+        
+        if (!gsid || !payload) {
+          document.getElementById('result').textContent = "Missing required parameters";
+          return;
+        }
+        
+        document.getElementById('result').textContent = "Sending data to Google Sheets...";
+        
+        // Create a form to submit directly
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `https://script.google.com/macros/s/${gsid}/exec`;
+        form.target = '_blank';
+        
+        const payloadInput = document.createElement('input');
+        payloadInput.type = 'hidden';
+        payloadInput.name = 'payload';
+        payloadInput.value = payload;
+        
+        form.appendChild(payloadInput);
+        document.body.appendChild(form);
+        form.submit();
+        
+        document.getElementById('result').textContent = "Data sent! If this page opened a popup window, you can close it.";
+      } catch (error) {
+        document.getElementById('result').textContent = "Error: " + error.message;
+      }
+    }
+    
+    // Run when the page loads
+    window.onload = sendToGoogleSheets;
+  </script>
+</head>
+<body>
+  <h1>Arduino to Google Sheets Bridge</h1>
+  <div id="result">Initializing...</div>
+  <p>This page is handling your request...</p>
+</body>
+</html>
