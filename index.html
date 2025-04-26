@@ -15,11 +15,17 @@
       }
 
       try {
+        // Log the parameters for debugging
+        console.log("GSID:", gsid);
+        console.log("Payload (encoded):", payload);
+        
         // Decode the payload
         const decodedPayload = decodeURIComponent(payload);
         console.log("Decoded payload:", decodedPayload);
         
         // Make request to Google Script
+        document.getElementById('status').textContent = "Sending request to Google Script...";
+        
         const response = await fetch(`https://script.google.com/macros/s/${gsid}/exec`, {
           method: 'POST',
           headers: {
@@ -29,11 +35,19 @@
         });
         
         const data = await response.text();
+        console.log("Response from Google:", data);
+        
+        // Update the response display
         document.getElementById('response').textContent = data;
-        document.getElementById('log').innerHTML += `<p>${new Date().toISOString()}: ${data}</p>`;
+        document.getElementById('status').textContent = "Request completed.";
+        
+        // Send the response back to the client
+        return data;
       } catch (error) {
+        console.error("Error:", error);
         document.getElementById('response').textContent = `Error: ${error.message}`;
-        document.getElementById('log').innerHTML += `<p>${new Date().toISOString()}: ERROR - ${error.message}</p>`;
+        document.getElementById('status').textContent = "Request failed.";
+        return `Error: ${error.message}`;
       }
     }
     
@@ -43,9 +57,7 @@
 </head>
 <body>
   <h1>Arduino Air Quality Proxy</h1>
-  <div id="response">Processing request...</div>
-  
-  <h2>Request Log:</h2>
-  <div id="log"></div>
+  <div id="status">Initializing...</div>
+  <div id="response">Waiting for request...</div>
 </body>
 </html>
