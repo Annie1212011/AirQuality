@@ -1,8 +1,7 @@
-// functions/proxy.js
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
-  // Set CORS headers to allow requests from anywhere
+  // Set CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -32,9 +31,8 @@ exports.handler = async function(event, context) {
   try {
     // Decode the payload
     const decodedPayload = decodeURIComponent(payload);
-    
-    console.log(`Forwarding to Google Scripts: ${gsid}`);
-    console.log(`Payload: ${decodedPayload}`);
+    console.log("GSID:", gsid);
+    console.log("Payload:", decodedPayload);
     
     // Forward the request to Google Scripts
     const response = await fetch(`https://script.google.com/macros/s/${gsid}/exec`, {
@@ -46,7 +44,7 @@ exports.handler = async function(event, context) {
     });
     
     const data = await response.text();
-    console.log(`Response from Google: ${data}`);
+    console.log("Response from Google:", data);
     
     return {
       statusCode: 200,
@@ -54,7 +52,7 @@ exports.handler = async function(event, context) {
       body: data
     };
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.error("Error:", error);
     
     return {
       statusCode: 500,
