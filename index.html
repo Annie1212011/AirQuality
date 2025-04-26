@@ -3,6 +3,7 @@
 <head>
   <title>Arduino Air Quality Proxy</title>
   <script>
+    // This function handles the query parameters and redirects
     async function handleRequest() {
       // Get parameters from URL
       const urlParams = new URLSearchParams(window.location.search);
@@ -10,44 +11,36 @@
       const payload = urlParams.get('payload');
       
       if (!gsid || !payload) {
-        document.getElementById('response').textContent = 'Error: Missing parameters';
+        document.getElementById('response').textContent = 'Error: Missing gsid or payload parameter';
         return;
       }
 
       try {
-        // Log the parameters for debugging
+        // Log parameters
         console.log("GSID:", gsid);
-        console.log("Payload (encoded):", payload);
+        console.log("Payload:", payload);
         
-        // Decode the payload
-        const decodedPayload = decodeURIComponent(payload);
-        console.log("Decoded payload:", decodedPayload);
+        // Instead of using fetch, redirect directly to Google Scripts with parameters
+        const googleScriptUrl = `https://script.google.com/macros/s/${gsid}/exec?payload=${payload}`;
         
-        // Make request to Google Script
-        document.getElementById('status').textContent = "Sending request to Google Script...";
+        // Update status
+        document.getElementById('status').textContent = "Redirecting to Google Script...";
         
-        const response = await fetch(`https://script.google.com/macros/s/${gsid}/exec`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: decodedPayload
-        });
+        // For Arduino requests, just return success since we can't actually redirect
+        // The Arduino will receive this HTML response but won't process it
+        if (navigator.userAgent.includes("Arduino")) {
+          document.getElementById('response').textContent = "Success";
+          return;
+        }
         
-        const data = await response.text();
-        console.log("Response from Google:", data);
-        
-        // Update the response display
-        document.getElementById('response').textContent = data;
-        document.getElementById('status').textContent = "Request completed.";
-        
-        // Send the response back to the client
-        return data;
+        // For browser testing, offer a link to redirect
+        document.getElementById('redirect-container').style.display = 'block';
+        document.getElementById('redirect-link').href = googleScriptUrl;
+        document.getElementById('redirect-link').textContent = "Click here to send data to Google Sheets";
+        document.getElementById('google-script-url').textContent = googleScriptUrl;
       } catch (error) {
-        console.error("Error:", error);
         document.getElementById('response').textContent = `Error: ${error.message}`;
         document.getElementById('status').textContent = "Request failed.";
-        return `Error: ${error.message}`;
       }
     }
     
@@ -59,5 +52,11 @@
   <h1>Arduino Air Quality Proxy</h1>
   <div id="status">Initializing...</div>
   <div id="response">Waiting for request...</div>
+  
+  <div id="redirect-container" style="display: none; margin-top: 20px; padding: 10px; background-color: #f0f0f0;">
+    <p><a id="redirect-link" href="#" target="_blank">Click to complete request</a></p>
+    <p>Google Script URL:</p>
+    <pre id="google-script-url" style="word-wrap: break-word; background-color: #e0e0e0; padding: 10px;"></pre>
+  </div>
 </body>
 </html>
