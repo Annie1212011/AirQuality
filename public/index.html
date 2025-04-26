@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Arduino Proxy Tester</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; }
+    button { padding: 10px; background: #0066cc; color: white; border: none; cursor: pointer; }
+    #response { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Arduino Proxy Tester</h1>
+  
+  <div>
+    <label for="gsid">Google Script ID:</label>
+    <input type="text" id="gsid" placeholder="Enter your Google Script ID">
+  </div>
+  
+  <div>
+    <label for="payload">JSON Payload:</label>
+    <textarea id="payload" rows="5" placeholder='{"command":"appendRow","sheet_name":"Sheet1","values":"test data"}'></textarea>
+  </div>
+  
+  <button onclick="testProxy()">Test Proxy</button>
+  
+  <div id="response">Results will appear here</div>
+
+  <script>
+    async function testProxy() {
+      const gsid = document.getElementById('gsid').value;
+      const payload = document.getElementById('payload').value;
+      
+      if (!gsid || !payload) {
+        alert('Please provide both GSID and payload');
+        return;
+      }
+      
+      document.getElementById('response').textContent = 'Sending request...';
+      
+      try {
+        const encodedPayload = encodeURIComponent(payload);
+        const response = await fetch(`/api/proxy?gsid=${gsid}&payload=${encodedPayload}`);
+        const data = await response.text();
+        
+        document.getElementById('response').textContent = data;
+      } catch (error) {
+        document.getElementById('response').textContent = `Error: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
